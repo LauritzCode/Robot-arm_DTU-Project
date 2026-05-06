@@ -17,8 +17,10 @@ typedef enum {
 } PWM_Timer;
 
 typedef enum {
+
+
     PWM_CH_A,   // Timer1: pin 11 (OC1A) | Timer3: pin 5 (OC3A) | Timer4: pin 6 (OC4A) | Timer5: pin 46 (OC5A)
-    PWM_CH_B,   // Timer1: pin 12 (OC1B) | Timer3: pin 2 (OC3B) | Timer4: pin 7 (OC4B) | Timer5: pin 45 (OC5B)
+    PWM_CH_B,   // Timer1: pin 12 (OC1B) | Timer3: pin 6/2 (OC3B) | Timer4: pin 7 (OC4B) | Timer5: pin 45 (OC5B)
     PWM_CH_C    // Timer1: pin 13 (OC1C) | Timer3: pin 3 (OC3C) | Timer4: pin 8 (OC4C) | Timer5: pin 44 (OC5C)
 } PWM_Channel;
 

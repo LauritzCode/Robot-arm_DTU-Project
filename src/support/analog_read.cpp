@@ -34,7 +34,11 @@ void select_ch(uint8_t channel) {
 uint16_t analog_read(uint8_t channel) {
 
     select_ch(channel);
-    SETBIT(ADCSRA, ADSC);    // manually start a fresh conversion on the new channel
+    // Dummy conversion: AVR ADC mux needs one cycle to settle after channel switch
+    SETBIT(ADCSRA, ADSC);
+    while(!adc_ready);
+    adc_ready = 0;
+    SETBIT(ADCSRA, ADSC);
     while(!adc_ready);
     adc_ready = 0;
     return ADC;
