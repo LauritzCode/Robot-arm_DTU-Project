@@ -32,6 +32,7 @@ int16_t deg[5] = {0,0,0,0,0};
 
 
 int main() {
+    // initiliasere alle dele 
     uart_init();
     _delay_ms(2000);
     I2C_Init();
@@ -50,6 +51,8 @@ int main() {
     sei();
     uart_print("Robot Arm ready\r\nCmds: min X  max X  (range -60 to 60)\r\n");
 
+    // globale 
+
     bool btn_prev = false;
     bool claw_opening = false;
     uint32_t last_btn_press = 0;
@@ -64,12 +67,16 @@ int main() {
         joystick_update(&j1);
         joystick_update(&j2);
 
+        // knap tilstand styring 
+
         if(j1.btn && !btn_prev && (now - last_btn_press) >= 500) {
             claw_opening = !claw_opening;
             last_btn_press = now;
         }
 
         btn_prev = j1.btn;
+
+        // UART styring af max "Degrees", tager imod kommandoerne "max x" og "min x" hvor x går fra -60 til 60. 
 
         if(receiveFlag) {
             char cmd[16];
@@ -88,18 +95,29 @@ int main() {
             }
         }
 
+        // Generel servo styring 
+
+
+    // speed_xs afgør hastigheden af servoen, hvor større analog værdi medfører til mindre delay mellem inkrementeringerne af 'deg' 
+
         int16_t speed_x1 = MAX_DELAY - ((float)abs(j1.x) / 512) * (MAX_DELAY - MIN_DELAY);
         int16_t speed_y1 = MAX_DELAY - ((float)abs(j1.y) / 512) * (MAX_DELAY - MIN_DELAY);
         int16_t speed_x2 = MAX_DELAY - ((float)abs(j2.x) / 512) * (MAX_DELAY - MIN_DELAY);
         int16_t speed_y2 = MAX_DELAY - ((float)abs(j2.y) / 512) * (MAX_DELAY - MIN_DELAY);
 
 
+    /* opdaterer indiduel servo på baggrund af speed_xs, som er beregnet ovenover.
+       Dette sker hvert "now - last_step[0] == speed_x1" under ideele sammenhænge". 
+       now er den tid er der gået siden programmet startede. Last_step er sidste "markering" i tidslinjen
+       hvornår den pågældende servo opdaterede.
+    */
+
         if(j1.x != 0 && (now - last_step[0]) >= (uint32_t)speed_x1) {
-          deg[0] += (j1.x > 0) ? 1 : -1;
-          if(deg[0] > deg_max) deg[0] = deg_max;
-          if(deg[0] < deg_min) deg[0] = deg_min;
-          servo_set_degrees(PWM_TIMER1, PWM_CH_A, deg[0]);
-          last_step[0] = now;
+          deg[0] += (j1.x > 0) ? 1 : -1; // Hvis jx.x er større end 0, så: deg[x] = deg[x] + 1, ellers - 1. 
+          if(deg[0] > deg_max) deg[0] = deg_max; // clamp max
+          if(deg[0] < deg_min) deg[0] = deg_min; // clamp min 
+          servo_set_degrees(PWM_TIMER1, PWM_CH_A, deg[0]); // api kald for opdateringen af den pågældende servo
+          last_step[0] = now; // <-- Last step bliver opdateret her. 
 }
 
       if(j1.y != 0 && (now - last_step[1]) >= (uint32_t)speed_y1) {
@@ -126,16 +144,18 @@ int main() {
           last_step[3] = now;
       }
 
-      if((now - last_step[4]) >= 250) {
-        if(claw_opening) {
-            if(deg[4] < 60) deg[4]++;
+      // opdaterer claw. 
+      if((now - last_step[4]) >= 250) { // hvis der er gået 25 ms: 
+        if(claw_opening) { // hvis hånden er igang med at åbne:
+            if(deg[4] < 60) deg[4]++; 
         } else {
-            if(deg[4] > -30) deg[4]--;
+            if(deg[4] > -30) deg[4]--; 
         }
         servo_set_degrees(PWM_TIMER4, PWM_CH_B, deg[4]);
         last_step[4] = now;
     }
 
+    // print joystick værdierne + duty cycle
 
     if((now - last_display) >= 5000) {
         char buf[18];
@@ -167,6 +187,7 @@ int main() {
   }
 }
 
+// vores "ur", tæller i 10kHz, så når ms_ticks stiger med 10K, er der gået et sekund. 
 
 ISR(TIMER5_COMPA_vect) {
   ms_ticks++;
