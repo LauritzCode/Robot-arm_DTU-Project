@@ -16,14 +16,6 @@
 #define MAX_DELAY 800
 #define MIN_DELAY 250
 
-#define ARM_ROTATION 11
-#define ARM_STRETCH 12
-#define ARM_HEIGHT 13
-#define HAND_ROTATION 5
-#define HAND_CLAW 2 
-#define OPTIONAL_SERVO 3
-
-
 Joystick j1, j2;
 volatile uint32_t ms_ticks = 0;  
 volatile uint32_t last_step[5] = {0,0,0,0,0};
